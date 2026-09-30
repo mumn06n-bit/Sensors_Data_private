@@ -256,12 +256,18 @@ function renderDO3Table(data: string): string {
 if (app) {
     //button追加
     app.innerHTML = `
-    <h2>センサデータ</h2>
+    <div class="title-row">
+        <h2>センサデータ</h2>
+        <a href="https://kitsunezaki.vercel.app/data" target="_blank" rel="noopener noreferrer">
+            狐崎みるはこちら
+        </a>
+    </div>
 
     <div id="tab-container">
-        <button id="water-tab" class="tab active">水温</button>
-        <button id="salinity-tab" class="tab">塩分</button>
+        <button id="water-tab" class="tab">水温</button>
+        <button id="salinity-tab" class="tab active">塩分</button>
         <button id="do1-tab" class="tab">DO1号</button>
+        <button id="do2-tab" class="tab">DO2号</button>
         <button id="do3-tab" class="tab">DO3号</button>
     </div>
 
@@ -281,7 +287,8 @@ if (app) {
 const waterTab = document.getElementById("water-tab");
 const salinityTab = document.getElementById("salinity-tab");
 const do1Tab = document.getElementById("do1-tab");
-const do3Tab = document.getElementById("do3-tab");//追加
+const do2Tab = document.getElementById("do2-tab");//追加
+const do3Tab = document.getElementById("do3-tab");
 
 //グラフ表示ボタン
 const chartToggleButton =
@@ -289,17 +296,14 @@ const chartToggleButton =
 const chartContainer =
     document.getElementById("chart-container");
 
-let currentSensorType = "water";
+let currentSensorType = "salinity";
 
 waterTab?.addEventListener("click", () => {
     currentSensorType = "water";
     setActiveTab(waterTab);
     loadTable(API_URLS.water, "water");
-
-    if (isChartVisible) {
-        loadChart(API_URLS.water, "water");
-    }
 });
+
 salinityTab?.addEventListener("click", () => {
     currentSensorType = "salinity";
     setActiveTab(salinityTab);
@@ -318,6 +322,22 @@ do1Tab?.addEventListener("click", () => {
 
     if (isChartVisible) {
         loadChart(API_URLS.do1, "do1");
+    }
+});
+
+do2Tab?.addEventListener("click", () => {
+    currentSensorType = "do2";
+
+    setActiveTab(do2Tab);
+
+    // API は未準備なので、準備中の表示だけ出す
+    const tableContainer = app?.querySelector("#table-container");
+    if (tableContainer) {
+        tableContainer.textContent = "準備中・・・";
+    }
+
+    if (chartContainer) {
+        chartContainer.textContent = "準備中・・・";
     }
 });
 
@@ -340,10 +360,14 @@ chartToggleButton?.addEventListener("click", () => {
         chartContainer!.style.display = "block";
 
         chartToggleButton.textContent = "グラフを非表示";
-        loadChart(
-            API_URLS[currentSensorType as keyof typeof API_URLS],
-            currentSensorType
-        );
+        if (currentSensorType === "do2") {
+            chartContainer!.textContent = "完成をお待ちください(｀・ω・´)";
+        } else {
+            loadChart(
+                API_URLS[currentSensorType as keyof typeof API_URLS],
+                currentSensorType
+            );
+        }
 
         // グラフを描画
     } else {
@@ -389,4 +413,4 @@ async function loadTable(apiUrl: string, sensorType: string) {
     }
 }
 
-loadTable(API_URLS.water, "water");
+loadTable(API_URLS.salinity, "salinity");

@@ -10,10 +10,26 @@ function parseData(data: string) {
     return parsed.data;
 }
 
+// グラフの表示間隔
+type Interval = "all" | "3h";
+
+// 表示間隔に合わせてデータを間引く共通関数
+function thinRows(rows: any[], interval: Interval): any[] {
+    // 全データ: 間引かない
+    if (interval === "all") return rows;
+
+    // 3時間ごと: 時刻が 0:00, 3:00, 6:00... のものだけ残す
+    return rows.filter((row: any) => {
+        const date = new Date(row[1]);
+        return date.getUTCMinutes() === 0 && date.getUTCHours() % 3 === 0;
+    });
+}
+
 export function renderChart(
     data: string,
     sensorType: string,
-    chartContainer: HTMLElement
+    chartContainer: HTMLElement,
+    interval: Interval = "3h",//3時間間隔に
 ) {
     if (!chartContainer) return;
 
@@ -101,7 +117,7 @@ export function renderChart(
                 </div>
             </div>`;
 
-        renderDO1Chart(data);
+        renderDO1Chart(data, interval);
     }
 
     if (sensorType === "do3") {
@@ -417,16 +433,12 @@ function renderSalinityChart(data: string) {
 // DO1号グラフ
 let do1Chart: Chart | null = null;
 
-function renderDO1Chart(data: string) {
+function renderDO1Chart(data: string, interval: Interval) {
     const rows = parseData(data);
 
     console.log("DO1のデータ件数:", rows.length);
 
-    const maxPoints = 500;
-    const step = Math.ceil(rows.length / maxPoints);
-    const displayRows = rows.filter(
-        (_, index) => index % step === 0
-    );
+    const displayRows = thinRows(rows, interval);
 
     const labels = displayRows.map((row: any) => {
         const date = new Date(row[1]);
