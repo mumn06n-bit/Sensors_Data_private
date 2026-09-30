@@ -545,6 +545,13 @@ function renderDO1Chart(data: string, interval: Interval) {
                 },
             },
             scales: {
+                // 横軸: ラベルを省略しない
+                x: {
+                    ticks: {
+                        autoSkip: false,
+                    },
+                },
+                
                 // 温度用
                 yTemp: {
                     display: false,
