@@ -440,6 +440,10 @@ function renderDO1Chart(data: string, interval: Interval) {
 
     const displayRows = thinRows(rows, interval);
 
+    // 確認用(あとで消します)
+    console.log("元データ(先頭12件):", rows.slice(0, 12).map((row: any) => row[1]));
+    console.log("間引き後(先頭8件):", displayRows.slice(0, 8).map((row: any) => row[1]));
+
     const labels = displayRows.map((row: any) => {
         const date = new Date(row[1]);
 
