@@ -545,13 +545,25 @@ function renderDO1Chart(data: string, interval: Interval) {
                 },
             },
             scales: {
-                // 横軸: ラベルを省略しない
+                // 横軸: 00:00 のときだけ日付も表示する
                 x: {
                     ticks: {
                         autoSkip: false,
+                        callback: function (value, index) {
+                            const label = this.getLabelForValue(Number(value));
+                            const [date = "", time = ""] = label.split(" ");
+
+                            // 00:00 と、いちばん左のラベルは日付も出す(2行表示)
+                            if (time === "00:00" || index === 0) {
+                                return [time, date];
+                            }
+
+                            // それ以外は時刻だけ
+                            return time;
+                        },
                     },
                 },
-                
+
                 // 温度用
                 yTemp: {
                     display: false,
