@@ -483,7 +483,7 @@ function renderDO1Chart(data: string, interval: Interval) {
     ) as HTMLCanvasElement;
 
     const chartWidth = Math.max(
-        displayRows.length * 20,
+        displayRows.length * 40,
         800
     );
     canvas.width = chartWidth;
@@ -549,6 +549,8 @@ function renderDO1Chart(data: string, interval: Interval) {
                 x: {
                     ticks: {
                         autoSkip: false,
+                        maxRotation: 0,
+                        minRotation: 0,
                         callback: function (value, index) {
                             const label = this.getLabelForValue(Number(value));
                             const [date = "", time = ""] = label.split(" ");
@@ -665,7 +667,7 @@ function renderDO3Chart(data: string) {
     ) as HTMLCanvasElement;
 
     const chartWidth = Math.max(
-        displayRows.length * 20,
+        displayRows.length * 40,
         800
     );
     canvas.width = chartWidth;
