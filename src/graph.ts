@@ -286,6 +286,9 @@ function renderSalinityChart(data: string, interval: Interval) {
 
     const displayRows = thinRows(rows, interval);
 
+    // 間引き前の全データから縦軸の範囲を計算
+    const salinityRange = calcAxisRange(rows, 6, 0.5, 0.5);
+
     const labels = displayRows.map((row: any) => {
         const date = new Date(row[1]);
 
@@ -409,8 +412,8 @@ function renderSalinityChart(data: string, interval: Interval) {
                         text: "psu",
                     },
 
-                    min: 26.0,
-                    max: 34.5,
+                    min: salinityRange.min,
+                    max: salinityRange.max,
                 },
 
                 // 右側の塩分用の軸
@@ -423,8 +426,8 @@ function renderSalinityChart(data: string, interval: Interval) {
                         text: "psu",
                     },
 
-                    min: 26.0,
-                    max: 34.5,
+                    min: salinityRange.min,
+                    max: salinityRange.max,
 
                     grid: {
                         drawOnChartArea: false,
@@ -454,9 +457,8 @@ function renderDO1Chart(data: string, interval: Interval) {
 
     const displayRows = thinRows(rows, interval);
 
-    // 確認用(あとで消します)
-    console.log("元データ(先頭12件):", rows.slice(0, 12).map((row: any) => row[1]));
-    console.log("間引き後(先頭8件):", displayRows.slice(0, 8).map((row: any) => row[1]));
+    const doPercentRange = calcAxisRange(rows, 5, 5, 5);   // %: 余白2、5刻み
+    const doMgLRange     = calcAxisRange(rows, 6, 0.5, 0.5); // mg/L
 
     const labels = displayRows.map((row: any) => {
         const date = new Date(row[1]);
@@ -598,8 +600,8 @@ function renderDO1Chart(data: string, interval: Interval) {
                         drawOnChartArea: false,
                     },
 
-                    min: 50,
-                    max: 115,
+                    min: doPercentRange.min,
+                    max: doPercentRange.max
                 },
 
                 // DO(mg/L)用
@@ -611,8 +613,8 @@ function renderDO1Chart(data: string, interval: Interval) {
                         display: true,
                         text: "mg/L",
                     },
-                    min: 3.5,
-                    max: 8,
+                    min: doMgLRange.min,
+                    max: doMgLRange.max,
                 },
             },
         },
@@ -804,4 +806,29 @@ function renderDO3Chart(data: string, interval: Interval) {
             scrollArea.scrollLeft = scrollArea.scrollWidth;
         }
     });
+}
+
+// 値の配列から、縦軸の min / max を計算する
+// margin: 余白、step: 目盛りが切りのいい数字になるよう丸める単位
+function calcAxisRange(
+    rows: any[],
+    columnIndex: number,
+    margin: number,
+    step: number,
+): { min: number | undefined; max: number | undefined } {
+    const values = rows
+        .map((row: any) => parseFloat(row[columnIndex]))
+        .filter((v) => Number.isFinite(v));
+
+    if (values.length === 0) {
+        return { min: undefined, max: undefined }; // 自動に任せる
+    }
+
+    const lo = values.reduce((a, b) => Math.min(a, b));
+    const hi = values.reduce((a, b) => Math.max(a, b));
+
+    return {
+        min: Math.floor((lo - margin) / step) * step,
+        max: Math.ceil((hi + margin) / step) * step,
+    };
 }
