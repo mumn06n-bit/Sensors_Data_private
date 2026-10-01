@@ -83,7 +83,7 @@ export function renderChart(
                 </div>
             </div>`;
 
-        renderSalinityChart(data);
+        renderSalinityChart(data, interval);
     }
 
     if (sensorType === "do1") {
@@ -151,7 +151,7 @@ export function renderChart(
                 </div>
             </div>`;
 
-        renderDO3Chart(data);
+        renderDO3Chart(data, interval);
     }
 }
 
@@ -198,7 +198,7 @@ function renderWaterChart(data: string) {
     ) as HTMLCanvasElement;
 
     const chartWidth = Math.max(
-        rows.length * 20,
+        rows.length * 40,
         800
     );
     canvas.width = chartWidth;
@@ -279,17 +279,12 @@ function renderWaterChart(data: string) {
 // 塩分グラフ
 let salinityChart: Chart | null = null;
 
-function renderSalinityChart(data: string) {
+function renderSalinityChart(data: string, interval: Interval) {
     const rows = parseData(data);
 
     console.log("塩分のデータ件数:", rows.length);
 
-
-    const maxPoints = 500;
-    const step = Math.ceil(rows.length / maxPoints);
-    const displayRows = rows.filter(
-        (_, index) => index % step === 0
-    );
+    const displayRows = thinRows(rows, interval);
 
     const labels = displayRows.map((row: any) => {
         const date = new Date(row[1]);
@@ -326,7 +321,7 @@ function renderSalinityChart(data: string) {
 
     // 縦横幅
     const chartWidth = Math.max(
-        displayRows.length * 20,
+        displayRows.length * 40,
         800
     );
     canvas.width = chartWidth;
@@ -380,6 +375,25 @@ function renderSalinityChart(data: string) {
                 },
             },
             scales: {
+                // 横軸: 00:00 のときだけ日付も表示する
+                x: {
+                    ticks: {
+                        autoSkip: false,
+                        maxRotation: 0,
+                        minRotation: 0,
+                        callback: function (value, index) {
+                            const label = this.getLabelForValue(Number(value));
+                            const [date = "", time = ""] = label.split(" ");
+
+                            if (time === "00:00" || index === 0) {
+                                return [time, date];
+                            }
+
+                            return time;
+                        },
+                    },
+                },
+
                 // 温度用の軸
                 yTemp: {
                     display: false,
@@ -617,16 +631,12 @@ function renderDO1Chart(data: string, interval: Interval) {
 // DO3号グラフ
 let do3Chart: Chart | null = null;
 
-function renderDO3Chart(data: string) {
+function renderDO3Chart(data: string, interval: Interval) {
     const rows = parseData(data);
 
     console.log("DO3のデータ件数:", rows.length);
 
-    const maxPoints = 500;
-    const step = Math.ceil(rows.length / maxPoints);
-    const displayRows = rows.filter(
-        (_, index) => index % step === 0
-    );
+    const displayRows = thinRows(rows, interval);
 
     const labels = displayRows.map((row: any) => {
         const date = new Date(row[1]);
@@ -729,6 +739,25 @@ function renderDO3Chart(data: string) {
                 },
             },
             scales: {
+                // 横軸: 00:00 のときだけ日付も表示する
+                x: {
+                    ticks: {
+                        autoSkip: false,
+                        maxRotation: 0,
+                        minRotation: 0,
+                        callback: function (value, index) {
+                            const label = this.getLabelForValue(Number(value));
+                            const [date = "", time = ""] = label.split(" ");
+
+                            if (time === "00:00" || index === 0) {
+                                return [time, date];
+                            }
+
+                            return time;
+                        },
+                    },
+                },
+
                 // 温度用
                 yTemp: {
                     display: false,
