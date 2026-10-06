@@ -12,16 +12,6 @@ function parseData(data: string) {
     return parsed.data;
 }
 
-// トグルボタンのHTML（ONのとき active）
-function intervalToggleButton(interval: Interval): string {
-    const isOn = interval === "3h";
-    return `
-        <div class="interval-buttons">
-            <button class="interval-btn ${isOn ? "active" : ""}"
-                    aria-pressed="${isOn}">3時間ごと</button>
-        </div>`;
-}
-
 export function renderChart(
     data: string,
     sensorType: string,
@@ -56,8 +46,7 @@ export function renderChart(
 
     if (sensorType === "salinity") {
         chartContainer.innerHTML =
-            `${intervalToggleButton(interval)}
-             <div class="chart-legend">
+            `<div class="chart-legend">
                 <span class="legend-item">
                     <span class="legend-color translucent-water-temp"></span>
                     水温
@@ -86,8 +75,7 @@ export function renderChart(
 
     if (sensorType === "do1") {
         chartContainer.innerHTML =
-            `${intervalToggleButton(interval)}
-             <div class="chart-legend">
+            `<div class="chart-legend">
                 <span class="legend-item">
                     <span class="legend-color translucent-water-temp"></span>
                     水温
@@ -121,8 +109,7 @@ export function renderChart(
 
     if (sensorType === "do3") {
         chartContainer.innerHTML =
-            `${intervalToggleButton(interval)}
-             <div class="chart-legend">
+            `<div class="chart-legend">
                 <span class="legend-item">
                     <span class="legend-color translucent-water-temp"></span>
                     水温
@@ -153,13 +140,6 @@ export function renderChart(
 
         renderDO3Chart(data, interval);
     }
-
-    // トグルボタン: 押すたびに "all" ⇔ "3h" を切り替えて描画し直す
-    const button = chartContainer.querySelector<HTMLButtonElement>(".interval-btn");
-    button?.addEventListener("click", () => {
-        const next: Interval = interval === "3h" ? "all" : "3h";
-        renderChart(data, sensorType, chartContainer, next);
-    });
 }
 
 const CHART_COLORS = {
@@ -646,7 +626,7 @@ function renderDO3Chart(data: string, interval: Interval) {
 
     const displayRows = thinRows(rows, interval);
 
-    const doPercentRange = calcAxisRange(rows, 5, 5, 5, 1, 300);
+    const doPercentRange = calcAxisRange(rows, 5, 2, 5, 1, 300);
 const doMgLRange     = calcAxisRange(rows, 6, 0.5, 0.5, 0.1, 30);
 
     const labels = displayRows.map((row: any) => {

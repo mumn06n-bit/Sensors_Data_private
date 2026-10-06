@@ -35,7 +35,7 @@
     min-width: 0;
     box-sizing: border-box;
     padding: 12px;
-    background: #e9e9e9;
+    background: #e4f4ff;
     border: 1px solid #ccc;
     border-bottom: none;
     cursor: pointer;
@@ -156,7 +156,17 @@ td {
     cursor: pointer;
 }
 .interval-btn.active {
-    background: #4fc3f7;
+    background: #3D76A4;
     color: #fff;
-    border-color: #4fc3f7;
+    border-color: #3D76A4;
+}
+.chart-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 表の表示間隔切り替えボタン */
+.table-interval-buttons {
+    justify-content: flex-end;
 }
