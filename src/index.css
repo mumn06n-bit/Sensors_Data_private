@@ -145,3 +145,18 @@ td {
 .translucent-outside-temp {
     background-color: #ef53507c;
 }
+
+/* グラフデータ間隔の切り替えボタン */
+.interval-buttons { display: flex; margin-bottom: 8px; }
+.interval-btn {
+    padding: 4px 12px;
+    border: 1px solid #aaa;
+    background: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.interval-btn.active {
+    background: #4fc3f7;
+    color: #fff;
+    border-color: #4fc3f7;
+}

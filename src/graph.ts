@@ -1,5 +1,7 @@
 import Chart from "chart.js/auto";
 import Papa from "papaparse";
+import "./index.css";
+import { thinRows, getPxPerPoint, type Interval } from "./thinRows.js"; // 間引き処理
 
 function parseData(data: string) {
     const parsed = Papa.parse(data, {
@@ -10,26 +12,21 @@ function parseData(data: string) {
     return parsed.data;
 }
 
-// グラフの表示間隔
-type Interval = "all" | "3h";
-
-// 表示間隔に合わせてデータを間引く共通関数
-function thinRows(rows: any[], interval: Interval): any[] {
-    // 全データ: 間引かない
-    if (interval === "all") return rows;
-
-    // 3時間ごと: 時刻が 0:00, 3:00, 6:00... のものだけ残す
-    return rows.filter((row: any) => {
-        const date = new Date(row[1]);
-        return date.getUTCMinutes() === 0 && date.getUTCHours() % 3 === 0;
-    });
+// トグルボタンのHTML（ONのとき active）
+function intervalToggleButton(interval: Interval): string {
+    const isOn = interval === "3h";
+    return `
+        <div class="interval-buttons">
+            <button class="interval-btn ${isOn ? "active" : ""}"
+                    aria-pressed="${isOn}">3時間ごと</button>
+        </div>`;
 }
 
 export function renderChart(
     data: string,
     sensorType: string,
     chartContainer: HTMLElement,
-    interval: Interval = "3h",//3時間間隔に
+    interval: Interval = "all",
 ) {
     if (!chartContainer) return;
 
@@ -59,7 +56,8 @@ export function renderChart(
 
     if (sensorType === "salinity") {
         chartContainer.innerHTML =
-            ` <div class="chart-legend">
+            `${intervalToggleButton(interval)}
+             <div class="chart-legend">
                 <span class="legend-item">
                     <span class="legend-color translucent-water-temp"></span>
                     水温
@@ -88,7 +86,8 @@ export function renderChart(
 
     if (sensorType === "do1") {
         chartContainer.innerHTML =
-            `<div class="chart-legend">
+            `${intervalToggleButton(interval)}
+             <div class="chart-legend">
                 <span class="legend-item">
                     <span class="legend-color translucent-water-temp"></span>
                     水温
@@ -122,7 +121,8 @@ export function renderChart(
 
     if (sensorType === "do3") {
         chartContainer.innerHTML =
-            `<div class="chart-legend">
+            `${intervalToggleButton(interval)}
+             <div class="chart-legend">
                 <span class="legend-item">
                     <span class="legend-color translucent-water-temp"></span>
                     水温
@@ -153,6 +153,13 @@ export function renderChart(
 
         renderDO3Chart(data, interval);
     }
+
+    // トグルボタン: 押すたびに "all" ⇔ "3h" を切り替えて描画し直す
+    const button = chartContainer.querySelector<HTMLButtonElement>(".interval-btn");
+    button?.addEventListener("click", () => {
+        const next: Interval = interval === "3h" ? "all" : "3h";
+        renderChart(data, sensorType, chartContainer, next);
+    });
 }
 
 const CHART_COLORS = {
@@ -287,7 +294,7 @@ function renderSalinityChart(data: string, interval: Interval) {
     const displayRows = thinRows(rows, interval);
 
     // 間引き前の全データから縦軸の範囲を計算
-    const salinityRange = calcAxisRange(rows, 6, 0.5, 0.5);
+    const salinityRange = calcAxisRange(rows, 6, 0.5, 0.5, 1, 45);
 
     const labels = displayRows.map((row: any) => {
         const date = new Date(row[1]);
@@ -315,7 +322,8 @@ function renderSalinityChart(data: string, interval: Interval) {
 
     // 塩分
     const salinityValues = displayRows.map((row: any) => {
-        return Number(row[6]);
+        const v = parseFloat(row[6]);
+        return v > 0 ? v : NaN; // 0以下の値は無効として NaN にする（線が途切れるように）
     });
 
     const canvas = document.getElementById(
@@ -324,13 +332,11 @@ function renderSalinityChart(data: string, interval: Interval) {
 
     // 縦横幅
     const chartWidth = Math.max(
-        displayRows.length * 40,
+        displayRows.length * getPxPerPoint(interval),
         800
     );
     canvas.width = chartWidth;
     canvas.height = 400;
-
-
 
     // すでにグラフが存在していたら削除
     if (salinityChart) {
@@ -457,8 +463,8 @@ function renderDO1Chart(data: string, interval: Interval) {
 
     const displayRows = thinRows(rows, interval);
 
-    const doPercentRange = calcAxisRange(rows, 5, 5, 5);   // %: 余白2、5刻み
-    const doMgLRange     = calcAxisRange(rows, 6, 0.5, 0.5); // mg/L
+    const doPercentRange = calcAxisRange(rows, 5, 2, 5, 1, 300);
+    const doMgLRange     = calcAxisRange(rows, 6, 0.5, 0.5, 0.1, 30);
 
     const labels = displayRows.map((row: any) => {
         const date = new Date(row[1]);
@@ -499,7 +505,7 @@ function renderDO1Chart(data: string, interval: Interval) {
     ) as HTMLCanvasElement;
 
     const chartWidth = Math.max(
-        displayRows.length * 40,
+        displayRows.length * getPxPerPoint(interval),
         800
     );
     canvas.width = chartWidth;
@@ -640,6 +646,9 @@ function renderDO3Chart(data: string, interval: Interval) {
 
     const displayRows = thinRows(rows, interval);
 
+    const doPercentRange = calcAxisRange(rows, 5, 5, 5, 1, 300);
+const doMgLRange     = calcAxisRange(rows, 6, 0.5, 0.5, 0.1, 30);
+
     const labels = displayRows.map((row: any) => {
         const date = new Date(row[1]);
 
@@ -679,7 +688,7 @@ function renderDO3Chart(data: string, interval: Interval) {
     ) as HTMLCanvasElement;
 
     const chartWidth = Math.max(
-        displayRows.length * 40,
+        displayRows.length * getPxPerPoint(interval),
         800
     );
     canvas.width = chartWidth;
@@ -778,8 +787,8 @@ function renderDO3Chart(data: string, interval: Interval) {
                         drawOnChartArea: false,
                     },
 
-                    min: 50,
-                    max: 115,
+                    min: doPercentRange.min,
+                    max: doPercentRange.max,
                 },
 
                 // DO(mg/L)用
@@ -791,8 +800,8 @@ function renderDO3Chart(data: string, interval: Interval) {
                         display: true,
                         text: "mg/L",
                     },
-                    min: 3.5,
-                    max: 8,
+                    min: doMgLRange.min,
+                    max: doMgLRange.max,
                 },
             },
         },
@@ -815,10 +824,12 @@ function calcAxisRange(
     columnIndex: number,
     margin: number,
     step: number,
+    validMin: number = -Infinity,
+    validMax: number = Infinity,
 ): { min: number | undefined; max: number | undefined } {
     const values = rows
         .map((row: any) => parseFloat(row[columnIndex]))
-        .filter((v) => Number.isFinite(v));
+        .filter((v) => Number.isFinite(v) && v >= validMin && v <= validMax);
 
     if (values.length === 0) {
         return { min: undefined, max: undefined }; // 自動に任せる
