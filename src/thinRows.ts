@@ -6,7 +6,7 @@ const MAX_POINTS = 500;
 
 // 表示間隔ごとの、1点あたりの横幅(px)
 export function getPxPerPoint(interval: Interval): number {
-    return interval === "3h" ? 30 : 20;
+    return interval === "3h" ? 35 : 35;
 }
 
 // 表示間隔に合わせてデータを間引く
