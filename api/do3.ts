@@ -40,7 +40,7 @@ export default async function handler(
 
     // 3. ブラウザにデータを返す
     return response.status(200).send(data);
-  } catch (_error) {
-    return response.status(500).json({ error: "通信エラーが発生しました。" });
-  }
+  } catch (error) {
+    console.error("salinity API error:", error);
+    return response.status(500).json({ error: "通信エラーが発生しました。" });  }
 }
