@@ -7,6 +7,7 @@ const API_URLS = {
     water: "/api/water",
     salinity: "/api/salinity",
     do1: "/api/do1",
+    do2: "/api/do2", //追加
     do3: "/api/do3", 
 };
 
@@ -66,6 +67,9 @@ const renderTable = (data: string, sensorType: string, interval: Interval): stri
 
     if (sensorType === "do1") {
         return renderDO1Table(data, interval);
+    }
+    if (sensorType === "do2") {
+        return renderDO2Table(data, interval);
     }
     //追加
     if (sensorType === "do3") {
@@ -212,6 +216,44 @@ function renderDO1Table(data: string, interval: Interval): string {
 
     return tableHtml;
 }
+function renderDO2Table(data: string, interval: Interval): string {
+    const rows = prepareRows(data, interval);
+
+    let tableHtml = `
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>センサID</th>
+                    <th>日時</th>
+                    <th>値</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    rows.reverse().forEach((row: any) => {
+
+        const utcDate = new Date(row[1]);
+        const jst = utcDate.toLocaleString("ja-JP", {
+            timeZone: "Asia/Tokyo"
+        });
+
+        tableHtml += `
+            <tr>
+                <td>${row[0]}</td>
+                <td>${jst}</td>
+                <td>${row[2]}</td>
+                </tr>
+        `;
+    });
+
+    tableHtml += `
+            </tbody>
+        </table>
+    `;
+
+    return tableHtml;
+}
 //追加
 function renderDO3Table(data: string, interval: Interval): string {
     const rows = prepareRows(data, interval);
@@ -268,6 +310,7 @@ if (app) {
         <a href="https://kitsunezaki.vercel.app/data" target="_blank" rel="noopener noreferrer">
             狐崎みるはこちら
         </a>
+
     </div>
 
     <div id="tab-container">
@@ -279,7 +322,7 @@ if (app) {
     </div>
 
     <div class="chart-controls">
-        <button id="chart-toggle-button">グラフを表示</button>
+        <button id="chart-toggle-button" class="chart-toggle-btn">グラフを表示</button>
         <button id="chart-interval-button" class="interval-btn" aria-pressed="false" style="display: none;">
             3時間ごと
         </button>
@@ -391,20 +434,12 @@ do1Tab?.addEventListener("click", () => {
 do2Tab?.addEventListener("click", () => {
     currentSensorType = "do2";
     updateChartIntervalVisibility();
-    tableData = null;   
-
     setActiveTab(do2Tab);
+    loadTable(API_URLS.do2, "do2");
 
-    // API は未準備なので、準備中の表示だけ出す
-    const tableContainer = app?.querySelector("#table-container");
-    if (tableContainer) {
-        tableContainer.textContent = "準備中・・・";
+    if (isChartVisible) {
+        loadChart(API_URLS.do2, "do2");
     }
-
-    if (chartContainer) {
-        chartContainer.textContent = "準備中・・・";
-    }
-    updateChartIntervalVisibility();
 });
 
 do3Tab?.addEventListener("click", () => {
@@ -428,17 +463,13 @@ chartToggleButton?.addEventListener("click", () => {
         chartToggleButton.textContent = "グラフを非表示";
         updateChartIntervalVisibility();
 
-        if (currentSensorType === "do2") {
-            chartContainer!.textContent = "完成をお待ちください(｀・ω・´)";
-        } else {
-            loadChart(
-                API_URLS[currentSensorType as keyof typeof API_URLS],
-                currentSensorType
-            );
-        }
-
-        // グラフを描画
-    } else {
+        loadChart(
+            API_URLS[currentSensorType as keyof typeof API_URLS],
+            currentSensorType
+        );
+    }
+    // グラフを描画
+    else {
         chartContainer!.style.display = "none";
         chartToggleButton.textContent = "グラフを表示";
         updateChartIntervalVisibility();
@@ -450,18 +481,18 @@ async function loadChart(
     apiUrl: string,
     sensorType: string
 ) {
-    const data = await fetchData(apiUrl);
-
-    if (!data) return;
-
     if (!chartContainer) return;
 
-renderChart(
-    data,
-    sensorType,
-    chartContainer,
-    chartInterval
-);
+    // DO2はグラフがないので、取得せずにメッセージだけ出す
+    if (sensorType === "do2") {
+        chartContainer.textContent = "DO2号のグラフは準備中です。";
+        return;
+    }
+
+    const data = await fetchData(apiUrl);
+    if (!data) return;
+
+    renderChart(data, sensorType, chartContainer, chartInterval);
 }
 
 // 表の状態
@@ -492,7 +523,7 @@ async function loadTable(apiUrl: string, sensorType: string) {
         showTable();
     } else {
         tableData = null;
-        container.textContent = "データの取得に失敗しました。";
+        container.textContent = "データの取得に失敗しました。2~5分ほど待ってからもう一度お試しください。";
     }
 }
 

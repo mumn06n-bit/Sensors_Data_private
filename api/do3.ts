@@ -41,6 +41,6 @@ export default async function handler(
     // 3. ブラウザにデータを返す
     return response.status(200).send(data);
   } catch (error) {
-    console.error("salinity API error:", error);
+    console.error("do3 API error:", error);
     return response.status(500).json({ error: "通信エラーが発生しました。" });  }
 }

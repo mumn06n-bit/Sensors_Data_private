@@ -96,6 +96,15 @@ td {
     box-sizing: border-box;
 }
 
+.chart-toggle-btn {
+    padding: 4px 12px;
+    border: 1px solid #3D76A4;
+    background: #fff;
+    color: #000;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
 .chart-scroll-area {
     overflow-x: auto;
     flex: 1 1 auto;
