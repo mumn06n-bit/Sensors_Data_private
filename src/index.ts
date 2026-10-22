@@ -225,7 +225,7 @@ function renderDO2Table(data: string, interval: Interval): string {
                 <tr>
                     <th>センサID</th>
                     <th>日時</th>
-                    <th>値</th>
+                    <th>値（調整中です！）</th>
                 </tr>
             </thead>
             <tbody>
